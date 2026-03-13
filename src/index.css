@@ -1,13 +1,34 @@
+/* src/index.css */
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  /* 1. เปลี่ยนฟอนต์หลักเป็น Prompt */
+  font-family: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+    sans-serif !important;
+  
+  /* 2. ปรับความคมชัดของตัวอักษร */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  
+  /* 3. กำหนดสีพื้นหลังให้ดูสะอาดตาและสีตัวอักษรพื้นฐาน */
+  background-color: #f8f9fc;
+  color: #2c3e50;
 }
 
 code {
+  /* สำหรับส่วนที่เป็นโค้ดหรือตัวเลขดิบที่ต้องการความกว้างคงที่ */
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* 4. เพิ่มสไตล์ให้หัวข้อดูเด่นขึ้น (Optional) */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600 !important;
+  letter-spacing: -0.5px;
+}
+
+/* 5. ทำให้ตัวเลขในตารางดูชัดเจน */
+table {
+  font-variant-numeric: tabular-nums; /* ทำให้ตัวเลขกว้างเท่ากัน ดูง่ายขึ้นในตาราง */
 }

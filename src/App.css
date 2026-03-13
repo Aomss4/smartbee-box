@@ -1,38 +1,61 @@
+/* นำฟอนต์ Prompt เข้ามาเพื่อความชัวร์ */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap');
+
+/* บังคับใช้ฟอนต์ Prompt ทั้งแอป */
+* {
+  font-family: 'Prompt', sans-serif !important;
+}
+
 .App {
   text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+  background-color: #f8f9fc; /* เปลี่ยนพื้นหลังให้สว่างและทันสมัย */
   min-height: 100vh;
+}
+
+/* ปรับปรุงส่วน Header ให้ดูเป็น Dashboard */
+.App-header {
+  background-color: #ffffff; /* เปลี่ยนจากสีดำเป็นขาวเพื่อให้ฟอนต์ Prompt อ่านง่าย */
+  padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  font-size: 1rem; /* ใช้หน่วย rem เพื่อความคงที่ของฟอนต์ */
+  color: #2c3e50;
+  border-bottom: 1px solid #edf2f7;
 }
 
+/* สไตล์สำหรับ Link */
 .App-link {
-  color: #61dafb;
+  color: #007bff;
+  text-decoration: none;
+  font-weight: 500;
 }
 
+.App-link:hover {
+  text-decoration: underline;
+}
+
+/* ปรับแต่งตารางให้เข้ากับฟอนต์ใหม่ (ถ้ามีตารางในหน้านี้) */
+table {
+  width: 100%;
+  font-family: 'Prompt', sans-serif !important;
+}
+
+th {
+  font-weight: 600;
+  color: #5a67d8;
+  padding: 12px;
+}
+
+td {
+  font-weight: 400;
+  color: #4a5568;
+  padding: 10px;
+}
+
+/* Animation เดิมของ React (เก็บไว้หรือลบออกก็ได้) */
 @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
