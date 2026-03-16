@@ -7,7 +7,7 @@ import { ArrowLeft, Calendar, Download, Box, Factory, Circle, Users, DollarSign,
 import Machine1Img from './assets/machine01.png'; 
 
 const MACHINES = [
-  { id: "MC01", name: "OTEC (THAILAND) CO., LTD", token: "0c9177f16ebc3d15c9290370e2aa5d31", image: Machine1Img },
+  { id: "MC01", name: "OTEC (THAILAND) CO., LTD", token: "52d99523b772b3c79dea90d582af5bd2", image: Machine1Img },
   { id: "MC02", name: "ตู้แผนกซ่อมบำรุง", token: "", image: Machine1Img },
   { id: "MC03", name: "ตู้คลังสินค้า", token: "", image: Machine1Img }
 ];
