@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import ReportTable from './ReportTable';
 import { motion, AnimatePresence } from 'framer-motion'; 
 import { ArrowLeft, Calendar, Download, Box, Factory, Circle, Users, DollarSign, LayoutGrid, List, RefreshCw } from 'lucide-react';
