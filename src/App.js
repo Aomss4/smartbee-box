@@ -9,271 +9,298 @@ import Machine1Img from "./assets/machine01.png";
 import AppLogo from "./assets/logo-materials.png"; 
 
 const MACHINES = [
-  { id: "MC01", name: "MATERIALS CARBIDE CO., LTD.", token: "21e6a9316dfffe5b6d944fc37f2c4440", image: Machine1Img },
-  { id: "MC02", name: "ตู้แผนกซ่อมบำรุง (Maintenance)", token: "ใส่โทเคนตรงนี้", image: Machine1Img },
-  { id: "MC03", name: "ตู้คลังสินค้า (Warehouse)", token: "ใส่โทเคนตรงนี้", image: Machine1Img },
-  // ... ตู้อื่นๆ ถ้าไม่มี Token ปุ่มจะกดซิงค์ไม่ได้นะครับ
+  { id: "MC01", name: "บริษัท โอเทค (ไทยแลนด์) จำกัด.", token: "32021fe95bee7e977df9db1e79d0b107", image: Machine1Img },
+  { id: "MC02", name: "บริษัท สายทิพย์ สแปพาร์ท จำกัด", token: "e8ca5787461158f82a6dd07b462c1711", image: Machine1Img },
+  { id: "MC03", name: "บริษัท เอ็มอาร์พี เอ็นจิเนียริ่ง จำกัด", token: "f07e3a1527eec06004d07a61fa961d05", image: Machine1Img },
+  { id: "MC04", name: "บริษัท มิตซูบิชิ เอลเลเวเตอร์ เอเซีย จำกัด", token: "e2d5b25ff721be1bc67034cd34a740e7", image: Machine1Img },
+  { id: "MC05", name: "บริษัท ซีเจแมนูแฟคเจอริ่ง จำกัด", token: "4bc6d9a59bc1f6cf703afa81fe075c65", image: Machine1Img },
+  { id: "MC06", name: "บริษัท อินเตอร์ทูล เทคโนโลยี จำกัด", token: "1cf9a026e0bf54c2c86f1034f178cc6f", image: Machine1Img },
+  { id: "MC07", name: "บริษัท เอ็นเอ็มบี-มินีแบ ไทย จำกัด", token: "051ec749f6948eb30ca43047f24d5faa", image: Machine1Img },
+  { id: "MC08", name: "บริษัท ซี.เอ.เอส.เอช. โอโตพาร์ทส จำกัด", token: "09df453697ac0a225b5d1d74acd575af", image: Machine1Img },
+  { id: "MC09", name: "ตู้สำรอง (Backup Unit)", token: "", image: Machine1Img }
 ];
 
-const BACKEND_URL = "https://smartbee-backend-qz1q.onrender.com/api";
-
-const PRODUCT_MASTER = {
-  INS0019: { unitPrice: 95, pcsPerBox: 10 },
-  INS0013: { unitPrice: 111, pcsPerBox: 10 },
-  TOL0007: { unitPrice: 1500, pcsPerBox: 1 },
-  INS0010: { unitPrice: 148, pcsPerBox: 10 }, 
-};
+const BACKEND_URL = "http://localhost:5000/api"; 
 
 const getProductInfo = (name) => {
-  const code = name ? name.split(" ")[0] : "";
-  if (PRODUCT_MASTER[code]) return PRODUCT_MASTER[code];
-  const isInsert = code.startsWith("INS") || name.toUpperCase().includes("INSERT");
-  return { unitPrice: 148, pcsPerBox: isInsert ? 10 : 1 }; 
+  const nameUpper = name?.toUpperCase() || "";
+
+  // 🚩 ระบุรหัสสินค้าที่ต้องการให้หาร 1 (ไม่ใช่ 10)
+  // เพิ่มรหัส A2336 และ A2414 เข้าไปในรายการนี้
+  const specialItems = ["A2336", "A2414"];
+
+  // ตรวจสอบว่าชื่อสินค้ามีรหัสที่ระบุไว้หรือไม่
+  const isSpecial = specialItems.some(code => nameUpper.includes(code));
+
+  // ตรวจสอบว่าเป็นกลุ่ม INSERT ทั่วไปหรือไม่
+  const isInsert = nameUpper.includes("INSERT") || nameUpper.startsWith("INS");
+
+  // --- Logic การตัดสินใจ ---
+  // 1. ถ้าเป็นรหัสพิเศษ (A2336, A2414) -> ให้หาร 1 ทันที
+  if (isSpecial) {
+    return { pcsPerBox: 1 };
+  }
+
+  // 2. ถ้าไม่ใช่รหัสพิเศษ แต่เป็น INSERT ทั่วไป -> ให้หาร 10
+  if (isInsert) {
+    return { pcsPerBox: 10 };
+  }
+
+  // 3. สินค้าอื่นๆ (เช่น End Mill, Holder) -> ให้หาร 1
+  return { pcsPerBox: 1 };
 };
-
-const calculatePcs = (productName, boxQty) => {
-  const info = getProductInfo(productName);
-  return Number(boxQty || 0) * info.pcsPerBox;
-};
-
-const calculateTotalPrice = (productName, boxQty) => {
-  const info = getProductInfo(productName);
-  const totalPcs = calculatePcs(productName, boxQty);
-  return totalPcs * info.unitPrice;
-};
-
-const SkeletonValue = () => (
-  <motion.div animate={{ opacity: [0.3, 0.6, 0.3] }} transition={{ duration: 1.5, repeat: Infinity }}
-    style={{ width: "80px", height: "24px", background: "#e2e8f0", borderRadius: "6px", display: "inline-block" }} />
-);
-
-const Navbar = () => (
-  <motion.nav initial={{ y: -100 }} animate={{ y: 0 }}
-    style={{
-      display: "flex", justifyContent: "space-between", alignItems: "center",
-      padding: "10px 40px", background: "#ffffff", position: "sticky", top: 0, zIndex: 1000, 
-      boxShadow: "none", borderBottom: "1px solid #f1f1f1",
-    }}>
-    <div style={{ display: "flex", alignItems: "center", gap: "25px" }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <img src={AppLogo} alt="Logo" style={{ height: "70px", width: "auto", objectFit: "contain", display: "block", mixBlendMode: "multiply" }} />
-      </div>
-      <div style={{ borderLeft: "1px solid #f1f1f1", paddingLeft: "25px", display: "flex", flexDirection: "column", justifyContent: "center", height: "60px" }}>
-        <h2 style={{ margin: 0, fontSize: "1.2rem", color: "#2c3e50", fontWeight: "bold", lineHeight: "1.2" }}>SmartBee <span style={{ color: "#007bff" }}>Box</span></h2>
-        <p style={{ margin: "2px 0 0 0", fontSize: "0.65rem", color: "#888", letterSpacing: "0.5px", fontWeight: "bold" }}>MATERIALS CARBIDE CO., LTD.</p>
-      </div>
-    </div>
-    <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-      <div style={{ textAlign: "right" }}>
-        <div style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#2c3e50" }}>Admin Panel</div>
-        <div style={{ fontSize: "0.75rem", color: "#28a745", display: "flex", alignItems: "center", gap: "4px", justifyContent: "flex-end" }}>
-          <Circle size={8} fill="#28a745" /> Online
-        </div>
-      </div>
-      <div style={{ width: "40px", height: "40px", borderRadius: "50%", background: "#f0f4f8", display: "flex", alignItems: "center", justifyContent: "center" }}><Factory size={20} color="#666" /></div>
-    </div>
-  </motion.nav>
-);
 
 function App() {
   const [selectedMachine, setSelectedMachine] = useState(null);
   const [data, setData] = useState([]);
-  const [startDate, setStartDate] = useState("2026-03-01");
-  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]); // วันที่ปัจจุบัน
+  const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [activeTab, setActiveTab] = useState("list");
-  const [globalSummary, setGlobalSummary] = useState({ totalValue: 0, totalItems: 0, uniqueStaff: 0, allRows: [] });
+  
+  const [totalItems, setTotalItems] = useState(0);
+  const [uniqueStaff, setUniqueStaff] = useState(0);
   const [isSumming, setIsSumming] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+
+  // ฟังก์ชันช่วยจัดรูปแบบข้อมูลให้พร้อมแสดงผล
+  const formatRecords = useCallback((rawArray) => {
+    if (!rawArray || rawArray.length === 0) return [];
+
+    const groupedMap = rawArray.reduce((acc, curr) => {
+      const uName = curr.nick_name || curr.user_name || "ไม่ระบุชื่อ";
+      const pName = curr.tool_model || curr.product_name || "ไม่ระบุสินค้า";
+      const pTime = curr.pay_time || curr.borrow_time || curr.create_time;
+      
+      const key = `${pTime}_${uName}_${pName}`;
+      const num = Number(curr.pay_num || curr.num || 0);
+
+      if (!acc[key]) {
+        acc[key] = { 
+          ...curr, 
+          user_name: uName,
+          product_name: pName,
+          pay_time: pTime,
+          pay_num: num 
+        };
+      } else {
+        acc[key].pay_num += num;
+      }
+      return acc;
+    }, {});
+
+    return Object.values(groupedMap).map(row => {
+      const info = getProductInfo(row.product_name);
+      return { 
+        ...row, 
+        actualTotalPcs: row.pay_num,
+        pay_num: row.pay_num / info.pcsPerBox 
+      };
+    });
+  }, []);
 
   const loadDataFromDB = useCallback(async () => {
     if (!selectedMachine) return;
     setIsSumming(true);
     try {
-      // เพิ่ม timestamp เพื่อเลี่ยง cache ของ browser
       const res = await fetch(`${BACKEND_URL}/records?machineId=${selectedMachine.id}&startDate=${startDate}&endDate=${endDate}&t=${Date.now()}`);
-      if (!res.ok) throw new Error("ดึงข้อมูลจาก DB ไม่สำเร็จ");
-      const records = await res.json();
-
-      const groupedMap = records.reduce((acc, curr) => {
-        const key = `${curr.pay_time}_${curr.user_name}_${curr.product_name}`;
-        if (!acc[key]) {
-          acc[key] = { ...curr, countRow: 1 };
-        } else {
-          acc[key].countRow += 1;
-        }
-        return acc;
-      }, {});
-
-      const finalRecords = Object.values(groupedMap).map((item) => {
-        const info = getProductInfo(item.product_name);
-        const boxQty = Math.ceil(item.countRow / info.pcsPerBox);
-        return { ...item, pay_num: boxQty };
-      });
-
-      setData(finalRecords);
-      const totalPcs = finalRecords.reduce((sum, item) => sum + calculatePcs(item.product_name, item.pay_num), 0);
-      const totalValue = finalRecords.reduce((sum, item) => sum + calculateTotalPrice(item.product_name, item.pay_num), 0);
-
-      setGlobalSummary({
-        totalValue: totalValue,
-        totalItems: totalPcs,
-        uniqueStaff: new Set(finalRecords.map((item) => item.user_name)).size,
-        allRows: finalRecords,
-      });
-    } catch (err) {
-      console.error("Fetch DB error:", err);
-    } finally {
-      setIsSumming(false);
+      if (!res.ok) throw new Error("Fetch DB error");
+      const rawRecords = await res.json();
+      
+      const final = formatRecords(rawRecords);
+      setData(final);
+      setTotalItems(final.reduce((sum, r) => sum + r.actualTotalPcs, 0));
+      setUniqueStaff(new Set(final.map(r => r.user_name)).size);
+    } catch (err) { 
+      console.error("Load Data Error:", err); 
+    } finally { 
+      setIsSumming(false); 
     }
-  }, [selectedMachine, startDate, endDate]);
+  }, [selectedMachine, startDate, endDate, formatRecords]);
+
+  useEffect(() => { loadDataFromDB(); }, [loadDataFromDB]);
 
   const handleSyncData = async () => {
-    if (!selectedMachine) return;
-    
-    // ตรวจสอบว่ามี Token ไหม
-    if (!selectedMachine.token) {
-        alert(`ตู้นี้ยังไม่ได้ตั้งค่า Token (ID: ${selectedMachine.id})`);
-        return;
-    }
-
+    if (!selectedMachine || !selectedMachine.token) return alert("กรุณาใส่ Token");
     setIsSyncing(true);
+
     try {
       const res = await fetch(`${BACKEND_URL}/sync-records`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-            token: selectedMachine.token, 
-            startDate: "2026-03-01", // บังคับดึงตั้งแต่ต้นเดือนมาใหม่
-            endDate: endDate, 
-            machineId: selectedMachine.id 
+          token: selectedMachine.token, 
+          startDate, endDate, 
+          machineId: selectedMachine.id 
         }),
       });
-      
+
       const result = await res.json();
-      
-      if (res.ok) {
-        alert(`ซิงค์สำเร็จ! พบข้อมูลใหม่ ${result.total || 0} รายการ`);
+
+      if (res.ok && result.rows) { 
+        // รับข้อมูลชุดใหญ่ (ทุกหน้า) มาแสดงผลทันที
+        const final = formatRecords(result.rows);
+        setData(final);
+        setTotalItems(final.reduce((sum, r) => sum + r.actualTotalPcs, 0));
+        setUniqueStaff(new Set(final.map(r => r.user_name)).size);
+        alert(`ซิงค์สำเร็จ! รวบรวมข้อมูลได้ทั้งหมด ${result.total} รายการ`); 
+      } else if (res.ok) {
         loadDataFromDB();
+        alert("ซิงค์สำเร็จ!");
       } else {
-        alert(`Server ตอบกลับผิดพลาด: ${result.message || 'Unknown Error'}`);
+        alert(`ซิงค์ไม่สำเร็จ: ${result.error}`);
       }
-    } catch (err) {
-      alert("ไม่สามารถติดต่อ Server ได้ (ตรวจสอบว่าเปิด Backend หรือยัง)");
-    } finally {
-      setIsSyncing(false);
+    } catch (err) { 
+      alert("ติดต่อ Backend Server ไม่ได้ หรือการเชื่อมต่อใช้เวลานานเกินไป"); 
+    } finally { 
+      setIsSyncing(false); 
     }
   };
 
-  useEffect(() => { loadDataFromDB(); }, [loadDataFromDB]);
-
   const productSummary = useMemo(() => {
-    const summary = globalSummary.allRows.reduce((acc, item) => {
-      const name = item.product_name || "ไม่ระบุชื่อสินค้า";
-      if (!acc[name]) acc[name] = { name, count: 0, total: 0 };
-      acc[name].count += calculatePcs(item.product_name, item.pay_num);
-      acc[name].total += calculateTotalPrice(item.product_name, item.pay_num);
+    const summary = data.reduce((acc, item) => {
+      const name = item.product_name;
+      if (!acc[name]) acc[name] = { name, count: 0 };
+      acc[name].count += item.actualTotalPcs;
       return acc;
     }, {});
     return Object.values(summary).sort((a, b) => b.count - a.count);
-  }, [globalSummary.allRows]);
+  }, [data]);
 
   const exportToCSV = () => {
-    const isList = activeTab === "list";
-    const rows = isList ? globalSummary.allRows : productSummary;
-    if (rows.length === 0) return;
-    let csvContent = "\uFEFF";
-    csvContent += isList ? "วันที่-เวลา,สินค้า,พนักงาน,จำนวนชิ้น,ราคารวม(บาท)\n" : "อันดับ,สินค้า,จำนวนรวม,ราคารวม(บาท)\n";
-    rows.forEach((row, idx) => {
-      if (isList) {
-        const date = new Date(row.pay_time).toLocaleString("th-TH", { timeZone: "Asia/Bangkok" });
-        csvContent += `${date},"${row.product_name}",${row.user_name},${calculatePcs(row.product_name, row.pay_num)},${calculateTotalPrice(row.product_name, row.pay_num)}\n`;
-      } else {
-        csvContent += `${idx + 1},"${row.name}",${row.count},${row.total}\n`;
-      }
+    let csvContent = "\uFEFFลำดับ,ผู้เบิก,วันที่บันทึก,สินค้า,จำนวนเบิก(กล่อง),จำนวนชิ้นรวม\n";
+    data.forEach((row, idx) => {
+      csvContent += `${idx + 1},${row.user_name},${row.pay_time},"${row.product_name}",${row.pay_num},${row.actualTotalPcs}\n`;
     });
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `Report_${startDate}.csv`;
+    link.setAttribute("download", `Report_${selectedMachine.id}_${startDate}.csv`);
     link.click();
   };
 
+  // --- Styles (คงเดิม) ---
+  const navStyle = { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 50px", background: "#fff", borderBottom: "2px solid #f1f5f9", position: 'sticky', top: 0, zIndex: 100, boxShadow: '0 4px 20px rgba(0,0,0,0.02)' };
+  const machineCardStyle = { cursor: "pointer", background: "#fff", padding: "30px", borderRadius: "35px", border: "1px solid #e2e8f0", textAlign: 'center', transition: '0.4s' };
+  const cardStyle = { background: "#fff", padding: "30px", borderRadius: "30px", display: "flex", alignItems: "center", gap: "25px", border: "1px solid #e2e8f0", boxShadow: '0 10px 25px rgba(0,51,102,0.03)' };
+  const summaryBoxStyle = { background: "#fff", padding: "30px", borderRadius: "35px", border: "1px solid #e2e8f0", boxShadow: '0 5px 25px rgba(0,0,0,0.02)', position: 'relative' };
+  const labelStyle = { margin: 0, fontSize: "0.9rem", color: "#64748b", fontWeight: "bold" };
+  const valueStyle = { margin: 0, fontSize: "2.4rem", fontWeight: "900" };
+  const tabBtn = { padding: "12px 28px", borderRadius: "18px", cursor: "pointer", display: "flex", alignItems: "center", gap: "10px", fontWeight: "800", fontSize: '0.95rem', transition: "0.3s" };
+  const backBtnStyle = { padding: "12px 24px", borderRadius: "18px", border: "1px solid #e2e8f0", background: "#fff", color: '#475569', cursor: "pointer", display: "flex", gap: "10px", alignItems: "center", fontWeight: '900', fontSize: '0.95rem' };
+  const syncBtnStyle = { padding: "12px 30px", borderRadius: "18px", background: "#fbbf24", color: "#003366", border: "none", cursor: "pointer", display: "flex", gap: "12px", alignItems: "center", fontWeight: '900', fontSize: '1rem', boxShadow: '0 4px 15px rgba(251,191,36,0.3)' };
+  const filterBarStyle = { background: '#fff', padding: '20px 35px', borderRadius: '30px', border: '1px solid #e2e8f0', marginBottom: '35px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+  const dateInputStyle = { border: '2px solid #f1f5f9', padding: '12px 18px', borderRadius: '15px', fontSize: '0.95rem', outline: 'none', color: '#003366', fontWeight: '700', background: '#f8fafc' };
+  const exportBtnStyle = { background: '#10b981', color: 'white', border: 'none', padding: '14px 28px', borderRadius: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '900', fontSize: '0.95rem', boxShadow: '0 4px 15px rgba(16,185,129,0.2)' };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#f8f9fc", fontFamily: "'Prompt', sans-serif" }}>
-      <Navbar />
+    <div style={{ minHeight: "100vh", background: "#f1f5f9", fontFamily: "'Prompt', sans-serif" }}>
+      <nav style={navStyle}>
+        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <div style={{ background: '#fff', padding: '5px', borderRadius: '10px' }}>
+            <img src={AppLogo} alt="Logo" style={{ height: "60px", mixBlendMode: 'multiply' }} />
+          </div>
+          <div style={{ borderLeft: "2px solid #e2e8f0", paddingLeft: "20px" }}>
+            <h2 style={{ margin: 0, fontSize: "1.3rem", color: "#003366", fontWeight: "800" }}>SmartBee <span style={{ color: "#fbbf24" }}>Box</span></h2>
+            <p style={{ margin: 0, fontSize: "0.7rem", color: "#64748b", fontWeight: "bold", letterSpacing: "1px" }}>MATERIALS CARBIDE CO., LTD.</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#003366' }}>Admin Portal</div>
+                <div style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '5px', justifyContent: 'flex-end' }}>
+                    <Circle size={8} fill="#10b981" /> Online
+                </div>
+            </div>
+            <div style={{ width: '45px', height: '45px', background: '#f8fafc', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #e2e8f0' }}>
+                <Factory size={24} color="#003366" />
+            </div>
+        </div>
+      </nav>
+
       <AnimatePresence mode="wait">
         {!selectedMachine ? (
-          <motion.div key="menu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ padding: "60px 20px", textAlign: "center" }}>
-            <h1 style={{ color: "#2c3e50", fontSize: "2.5rem", fontWeight: "bold" }}>Dashboard การเบิกตู้ SmartBee</h1>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "30px", maxWidth: "1200px", margin: "50px auto 0 auto" }}>
-              {MACHINES.map((m) => (
-                <motion.div key={m.id} whileHover={{ y: -10 }} onClick={() => setSelectedMachine(m)} style={{ cursor: "pointer", background: "#fff", padding: "25px", borderRadius: "32px", boxShadow: "0 10px 30px rgba(0,0,0,0.03)", border: "1px solid #f0f0f0" }}>
-                  <img src={m.image} alt={m.name} style={{ width: "100%", height: "180px", objectFit: "contain" }} />
-                  <p style={{ fontWeight: "bold", marginTop: "20px", color: "#2c3e50" }}>{m.name}</p>
-                  <span style={{ fontSize: "0.7rem", color: "#007bff", background: "#eef2ff", padding: "4px 12px", borderRadius: "10px" }}>ID: {m.id}</span>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
+          <div style={{ padding: "60px 20px", textAlign: "center" }}>
+             <h1 style={{color: "#003366", fontWeight: "900", fontSize: '2.5rem', marginBottom: '10px'}}>Materials Carbide <span style={{color: '#fbbf24'}}>SmartBee</span></h1>
+             <p style={{color: '#64748b', marginBottom: '50px'}}>กรุณาเลือกตู้ที่ต้องการจัดการข้อมูล</p>
+             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "30px", maxWidth: "1250px", margin: "0 auto" }}>
+                {MACHINES.map(m => (
+                  <motion.div key={m.id} whileHover={{ y: -12, boxShadow: '0 20px 40px rgba(0,51,102,0.1)' }} onClick={() => setSelectedMachine(m)} style={machineCardStyle}>
+                    <div style={{background: '#f8fafc', borderRadius: '25px', padding: '20px', marginBottom: '20px', border: '1px solid #f1f5f9'}}>
+                        <img src={m.image} alt={m.name} style={{width: "100%", height: "160px", objectFit: 'contain'}} />
+                    </div>
+                    <p style={{fontWeight: "800", color: '#003366', fontSize: '1.1rem', margin: '10px 0'}}>{m.name}</p>
+                    <span style={{fontSize: '0.75rem', color: '#fff', background: '#003366', padding: '6px 16px', borderRadius: '10px', fontWeight: 'bold'}}>ID: {m.id}</span>
+                  </motion.div>
+                ))}
+             </div>
+          </div>
         ) : (
-          <motion.div key="report" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ padding: "30px", maxWidth: "1300px", margin: "0 auto" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px" }}>
-              <button onClick={() => setSelectedMachine(null)} style={{ padding: "10px 20px", borderRadius: "12px", border: "1px solid #ddd", background: "#fff", cursor: "pointer", display: "flex", gap: "8px", alignItems: "center" }}><ArrowLeft size={18} /> กลับ</button>
-              <div style={{ textAlign: "center" }}>
-                <h2 style={{ color: "#2c3e50", margin: 0 }}>{selectedMachine.name}</h2>
-                <div style={{ display: "flex", gap: "10px", marginTop: "15px", justifyContent: "center" }}>
-                  <button onClick={() => setActiveTab("list")} style={{ ...tabButtonStyle, background: activeTab === "list" ? "#007bff" : "#fff", color: activeTab === "list" ? "#fff" : "#666" }}><List size={16} /> รายการละเอียด</button>
-                  <button onClick={() => setActiveTab("summary")} style={{ ...tabButtonStyle, background: activeTab === "summary" ? "#007bff" : "#fff", color: activeTab === "summary" ? "#fff" : "#666" }}><LayoutGrid size={16} /> สรุปสินค้า</button>
-                </div>
+          <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} style={{ padding: "30px", maxWidth: "1400px", margin: "0 auto" }}>
+            
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "35px" }}>
+              <button onClick={() => setSelectedMachine(null)} style={backBtnStyle}><ArrowLeft size={18} /> กลับ</button>
+              <div style={{textAlign: "center"}}>
+                 <h2 style={{margin: 0, color: '#003366', fontWeight: '900', fontSize: '1.8rem'}}>{selectedMachine.name}</h2>
+                 <div style={{display: "flex", gap: "10px", marginTop: "20px", justifyContent: "center"}}>
+                    <button onClick={() => setActiveTab("list")} style={{...tabBtn, background: activeTab === "list" ? "#003366" : "#fff", color: activeTab === "list" ? "#fff" : "#475569", border: '1px solid #e2e8f0'}}><List size={18} /> รายการรายละเอียด</button>
+                    <button onClick={() => setActiveTab("summary")} style={{...tabBtn, background: activeTab === "summary" ? "#003366" : "#fff", color: activeTab === "summary" ? "#fff" : "#475569", border: '1px solid #e2e8f0'}}><LayoutGrid size={18} /> สรุปแยกสินค้า</button>
+                 </div>
               </div>
-              <button 
-                onClick={handleSyncData} 
-                disabled={isSyncing} 
-                style={{ 
-                    padding: "10px 20px", borderRadius: "12px", 
-                    background: selectedMachine.token ? "#6366f1" : "#cbd5e1", 
-                    color: "white", border: "none", 
-                    cursor: (isSyncing || !selectedMachine.token) ? "not-allowed" : "pointer", 
-                    display: "flex", gap: "8px", alignItems: "center" 
-                }}
-              >
-                <RefreshCw size={18} className={isSyncing ? "animate-spin" : ""} /> 
-                {isSyncing ? "กำลังซิงค์..." : "ซิงค์ข้อมูลล่าสุด"}
+              <button onClick={handleSyncData} disabled={isSyncing} style={syncBtnStyle}>
+                <RefreshCw size={20} className={isSyncing ? "animate-spin" : ""} /> {isSyncing ? "กำลังซิงค์ข้อมูลทั้งหมด..." : "ซิงค์ข้อมูลล่าสุด"}
               </button>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px", marginBottom: "30px" }}>
-              <div style={summaryCardStyle}><Box color="#3182ce" /> <div><p style={labelStyle}>จำนวนเม็ด/ชิ้นรวม</p><h3 style={valueStyle}>{isSumming ? <SkeletonValue /> : `${globalSummary.totalItems.toLocaleString()} ชิ้น`}</h3></div></div>
-              <div style={summaryCardStyle}><Users color="#e53e3e" /> <div><p style={labelStyle}>พนักงานที่เบิก</p><h3 style={valueStyle}>{isSumming ? <SkeletonValue /> : `${globalSummary.uniqueStaff} คน`}</h3></div></div>
+            <div style={filterBarStyle}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ background: '#e0f2fe', padding: '10px', borderRadius: '12px' }}><Calendar size={22} color="#003366" /></div>
+                    <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={dateInputStyle} />
+                        <span style={{color: '#cbd5e0', fontWeight: '900'}}>TO</span>
+                        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={dateInputStyle} />
+                    </div>
+                </div>
+                <button onClick={exportToCSV} style={exportBtnStyle}><Download size={18} /> ดาวน์โหลดรายงาน</button>
             </div>
 
-            <div style={{ marginBottom: "25px", padding: "20px", background: "#fff", borderRadius: "15px", display: "flex", gap: "15px", alignItems: "center", border: "1px solid #eee" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <Calendar size={18} color="#007bff" />
-                <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} style={dateInputStyle} />
-                <span>ถึง</span>
-                <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} style={dateInputStyle} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "30px", marginBottom: "35px" }}>
+              <div style={cardStyle}>
+                <div style={{background: '#003366', padding: '18px', borderRadius: '20px'}}><Box color="#fff" size={35} /></div>
+                <div>
+                    <p style={labelStyle}>จำนวนเม็ด/ชิ้นรวมทั้งหมด</p>
+                    <h3 style={{...valueStyle, color: '#003366'}}>{isSumming || isSyncing ? "..." : `${totalItems.toLocaleString()}`} <span style={{fontSize: '1.2rem', color: '#94a3b8'}}>ชิ้น</span></h3>
+                </div>
               </div>
-              <button onClick={exportToCSV} style={{ marginLeft: "auto", padding: "10px 20px", background: "#28a745", color: "white", border: "none", borderRadius: "12px", cursor: "pointer", display: "flex", gap: "8px", alignItems: "center" }}><Download size={18} /> ส่งออก CSV</button>
+              <div style={cardStyle}>
+                <div style={{background: '#fbbf24', padding: '18px', borderRadius: '20px'}}><Users color="#003366" size={35} /></div>
+                <div>
+                    <p style={labelStyle}>พนักงานที่ทำรายการ</p>
+                    <h3 style={{...valueStyle, color: '#003366'}}>{isSumming || isSyncing ? "..." : `${uniqueStaff}`} <span style={{fontSize: '1.2rem', color: '#94a3b8'}}>คน</span></h3>
+                </div>
+              </div>
             </div>
 
             <AnimatePresence mode="wait">
               {activeTab === "list" ? (
-                <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <ReportTable records={data} calculatePcs={calculatePcs} calculateTotalPrice={calculateTotalPrice} getProductInfo={getProductInfo} hidePrice={true} />
+                <motion.div key="list" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{background: "#fff", padding: "25px", borderRadius: "30px", border: "1px solid #e2e8f0", boxShadow: '0 10px 30px rgba(0,0,0,0.03)'}}>
+                   <ReportTable records={data} getProductInfo={getProductInfo} hidePrice={true} />
                 </motion.div>
               ) : (
-                <motion.div key="summary" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "20px" }}>
-                  {productSummary.map((item, idx) => (
-                    <div key={idx} style={{ background: "#fff", padding: "25px", borderRadius: "20px", border: "1px solid #eee", boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
-                      <p style={{ fontSize: "0.75rem", fontWeight: "bold", color: "#6366f1", background: "#e0e7ff", display: "inline-block", padding: "4px 12px", borderRadius: "20px", marginBottom: "10px" }}>อันดับ {idx + 1}</p>
-                      <h4 style={{ margin: "0 0 15px 0", color: "#1e293b" }}>{item.name}</h4>
-                      <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "15px" }}>
-                        <div><small style={{ color: "#94a3b8" }}>จำนวนรวม</small><br /><strong>{item.count.toLocaleString()}</strong> ชิ้น</div>
+                <motion.div key="summary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "25px" }}>
+                   {productSummary.map((item, idx) => (
+                      <div key={idx} style={summaryBoxStyle}>
+                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <span style={{ fontSize: "0.75rem", color: "#003366", fontWeight: "900", background: '#fbbf24', padding: '6px 15px', borderRadius: '10px' }}>RANK {idx + 1}</span>
+                            <Box size={20} color="#e2e8f0" />
+                         </div>
+                         <h4 style={{ margin: "20px 0 10px 0", color: '#003366', lineHeight: '1.4', fontWeight: '800' }}>{item.name}</h4>
+                         <div style={{ borderTop: '2px solid #f8fafc', paddingTop: '20px', marginTop: '15px' }}>
+                            <p style={{ margin: 0, color: "#64748b", fontSize: '0.85rem', fontWeight: 'bold' }}>ยอดเบิกสะสมรวม</p>
+                            <p style={{ margin: 0, color: '#003366', fontSize: '1.8rem', fontWeight: '900' }}>{item.count.toLocaleString()} <span style={{fontSize: '1rem', fontWeight: 'normal', color: '#94a3b8'}}>ชิ้น</span></p>
+                         </div>
                       </div>
-                    </div>
-                  ))}
+                   ))}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -283,11 +310,5 @@ function App() {
     </div>
   );
 }
-
-const tabButtonStyle = { padding: "8px 16px", borderRadius: "10px", border: "1px solid #eee", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px", fontSize: "0.9rem", fontWeight: "bold", transition: "0.2s" };
-const summaryCardStyle = { background: "#fff", padding: "20px", borderRadius: "24px", display: "flex", alignItems: "center", gap: "15px", border: "1px solid #eee" };
-const labelStyle = { margin: 0, fontSize: "0.8rem", color: "#718096", fontWeight: "bold" };
-const valueStyle = { margin: 0, color: "#2d3748", fontSize: "1.5rem", fontWeight: "800", minHeight: "36px" };
-const dateInputStyle = { padding: "8px", borderRadius: "10px", border: "1px solid #ddd", fontFamily: "inherit" };
 
 export default App;
